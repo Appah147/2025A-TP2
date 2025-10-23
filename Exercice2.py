@@ -20,6 +20,9 @@ def calculer_priorite(commande):
     # TODO: Implémenter l'algorithme de priorité
     # Score = (temps_attente × 2) + (nombre_items × 1) + (client_vip × 10)
     
+    vip = 1 if commande.get("client_vip", 0) == True else 0
+    score = (commande.get('temps_attente', 0) * 2) + (commande.get('nombre_items')) + (vip)*10
+    
     return score
 
 
@@ -36,8 +39,20 @@ def trier_commandes(liste_commandes):
     """
     # TODO: Implémenter un algorithme de tri (suggestion: tri à bulles)
     # Les commandes avec le score le plus élevé doivent être en premier
-    
-    return liste_commandes
+
+    n = len(liste_commandes)
+    commandesTriees = liste_commandes.copy()
+
+    for i in range(n):
+        
+        for j in range(0, n - i - 1):
+            priorite1 = calculer_priorite(commandesTriees[j])
+            priorite2 = calculer_priorite(commandesTriees[j + 1])
+
+            if priorite1 < priorite2:
+                commandesTriees[j], commandesTriees[j + 1] = commandesTriees[j + 1], commandesTriees[j]
+            
+    return commandesTriees
 
 
 def estimer_temps_total(liste_commandes_triee):
@@ -54,6 +69,19 @@ def estimer_temps_total(liste_commandes_triee):
     
     # TODO: Calculer le temps total et moyen
     # Chaque item prend en moyenne 3 minutes à préparer
+
+    tempsTotal = 0
+
+    for commande in liste_commandes_triee:
+        nbItems = commande.get('nombre_items', 0)
+        tempsTotal += nbItems * 3
+    
+    tempsMoyen = tempsTotal/len(liste_commandes_triee) if liste_commandes_triee else 0
+
+    temps_stats = {
+        'temps_total': tempsTotal,
+        'temps_moyen': tempsMoyen
+    }
     
     return temps_stats
 
@@ -72,6 +100,10 @@ def identifier_commandes_urgentes(liste_commandes, seuil_attente=30):
     commandes_urgentes = []
     
     # TODO: Identifier les commandes avec temps_attente > seuil
+
+    for commande in liste_commandes:
+        if commande.get('temps_attente', 0) > seuil_attente:
+            commandes_urgentes.append(commande['numero'])
     
     return commandes_urgentes
 

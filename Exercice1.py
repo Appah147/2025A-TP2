@@ -19,10 +19,38 @@ def analyser_menu(menu):
     
     # TODO: Calculer le plat le plus rentable (ratio popularité/temps_preparation)
     # Attention: gérer le cas où temps_preparation pourrait être 0
+    varTemp = 0
+    renta = ""
+    compteur = 0
+    prixTotal = 0
+    tempsTotal = 0
+    for cle in menu.keys():
+
+        choix = menu[cle]
+        tempsPrep = choix[1]
+        pop = choix[2]
+
+        if tempsPrep != 0:  
+            ratio = pop/tempsPrep
+        else: 
+            continue
+
+        if ratio > varTemp:
+            varTemp = ratio
+            renta = cle
     
     # TODO: Calculer le prix moyen du menu
-    
+        compteur += 1
+        prixTotal += choix[0]
+
+   
     # TODO: Calculer le temps de préparation moyen
+        tempsTotal += choix[1]
+
+    moyennePrix = prixTotal / compteur
+    moyenneTemps = tempsTotal / compteur
+
+    stats = {'plat_plus_rentable' : renta, 'prix_moyen' : moyennePrix, 'temps_moyen' : moyenneTemps}
     
     return stats
 
@@ -38,10 +66,31 @@ def filtrer_menu_par_categorie(menu, categories):
     Returns:
         dict: Menu organisé par catégories
     """
-    menu_filtre = {}
+    menu_filtre = {'entrées': "", 'plats': "", 'desserts': ""}
     
     # TODO: Organiser les plats par catégorie
     # Exemple: {'entrées': [...], 'plats': [...], 'desserts': [...]}
+
+    entrees = []
+    plats = []
+    desserts = []
+
+    for cle in categories.keys():
+
+        temp = menu.get(cle, 0)
+
+        match (categories.get(cle, 0)):
+            case "entrées":
+                entrees.append(cle)
+                #entrees.append(temp)
+            case "plats":
+                plats.append(cle)
+                #plats.append(temp)
+            case "desserts":
+                desserts.append(cle)
+                #desserts.append(temp)
+    
+    menu_filtre = {'entrées': entrees, 'plats': plats, 'desserts': desserts}
     
     return menu_filtre
 
@@ -61,6 +110,11 @@ def calculer_profit(menu, ventes_jour):
     
     # TODO: Calculer le profit total
     # profit = somme(prix_plat * nombre_ventes) pour chaque plat vendu
+
+    for cle in ventes_jour.keys():
+        plat = ventes_jour.get(cle, 0)
+        if plat != 0:
+            profit += ventes_jour[cle] * menu[cle][0]
     
     return profit
 

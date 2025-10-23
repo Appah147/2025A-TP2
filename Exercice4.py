@@ -38,8 +38,18 @@ def initialiser_salle(nb_rangees, nb_colonnes, positions_tables):
     
     # TODO: Créer une grille remplie de 'X' (espaces non disponibles)
     # Puis placer les tables aux positions indiquées
-    # Format: 'L2' pour table libre de 2, 'L4' pour table libre de 4
-    
+    # Format: 'L2' pour table libre de 2, 'L4' pour table libre de 4#Liste de liste [ [] , [], [] , [] ]
+    salle = [['X' for _ in range(nb_colonnes)] for _ in range(nb_rangees)]
+
+    #fait toutes les positions tables une par une
+    for rangee, colonne, taille_table in positions_tables:
+
+        #Vérifie la taille de la table
+        if taille_table == 2 :
+            salle[rangee][colonne] = "L2"
+        else :
+            salle[rangee][colonne] = "L4"
+
     return salle
 
 
@@ -59,7 +69,20 @@ def marquer_reservation(salle, position, taille_groupe):
     
     # TODO: Marquer la table à la position donnée comme réservée (vérifier qu'elle est libre, on pourra utiliser la méthode startswith())
     # 'R2' pour table de 2 réservée, 'R4' pour table de 4
-    
+
+    if salle[position[0]][position[1]] == "L2" :
+        if taille_groupe <= 2 :
+            salle[position[0]][position[1]] = "R2" 
+            print("La table est réservé")
+
+    elif nouvelle_salle[position[0]][position[1]] == "L4" :
+        if taille_groupe <= 4 :
+            nouvelle_salle[position[0]][position[1]] = "R4" 
+            print("La table est réservé")
+
+    else :
+        print("La table ", position, " n'est pas disponible")
+
     return nouvelle_salle
 
 
@@ -86,6 +109,15 @@ def calculer_score_table(position, taille_table, taille_groupe, nb_colonnes):
     # - Pénalité: -10 points par place vide (gaspillage)
     # - Bonus fenêtre: +20 points si colonne == 0 ou colonne == nb_colonnes-1
     # - Bonus position: +5 points si rangée < 3 (près de l'entrée)
+
+    if taille_groupe > taille_table :
+        return - 1
+    elif taille_groupe < taille_table : 
+        score += 10 * (taille_groupe - taille_table)
+    elif position[0] == 0 or position[0] == nb_colonnes - 1 :
+        score += 20
+    elif position[1] < 3 :
+        score += 5
     
     return score
 
@@ -106,6 +138,29 @@ def trouver_meilleure_table(salle, taille_groupe):
     
     # TODO: Parcourir toutes les tables libres ('L2' ou 'L4')
     # Calculer leur score et garder la meilleure
+    taille_table = 0
+    
+    if 0 < taille_groupe <= 2 :
+        taille_table = 2
+    elif 2 < taille_groupe <= 4 :
+        taille_table = 4
+    else :
+        return None
+        
+    ligne = 0
+
+    for rangee in salle :
+        colonne = 0
+        ligne = 0
+        for i in rangee:
+             if (f"L{taille_table}" == i) :
+                position = (ligne,colonne)
+                temp = calculer_score_table(position, taille_table, taille_groupe, nb_colonnes)
+                if temp > meilleur_score :
+                  meilleur_score = temp
+                  meilleure_table = (position, taille_table)
+                  colonne += 1
+             ligne += 1
     
     return meilleure_table
 
@@ -132,6 +187,32 @@ def generer_rapport_occupation(salle):
     
     # TODO: Compter les différents types de tables
     # Calculer le taux d'occupation (réservées + occupées) / total
+
+    total = 0
+    compteur_R_O = 0
+
+    for rangee in salle :
+        for colonne in rangee : 
+            if colonne == "L2" :
+              rapport['tables_libres_2'] += 1
+            elif colonne == "L4" :
+                rapport['tables_libres_4'] += 1
+            elif colonne == "R4" :
+              rapport['tables_reservees_4'] += 1
+              compteur_R_O += 1
+            elif colonne == "R2" :
+             rapport['tables_reservees_2'] += 1
+             compteur_R_O += 1
+            elif colonne == "O2" :
+                rapport['tables_occupees_2'] += 1
+                compteur_R_O += 1
+            elif colonne == "O4" :
+               rapport['tables_occupees_4'] += 1
+               compteur_R_O += 1
+
+            total += 1
+
+    rapport['taux_occupation'] = compteur_R_O / total
     
     return rapport
 

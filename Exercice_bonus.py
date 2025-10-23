@@ -44,8 +44,7 @@ def initialiser_restaurant():
     Returns:
         tuple: (grille, position_cuisine, tables_positions)
     """
-    grille = []
-    tables_positions = []
+
     
     # TODO: Créer une grille 5x5
     # 'K' = cuisine (position 0,2)
@@ -54,7 +53,17 @@ def initialiser_restaurant():
     # '_' = espace vide
     # Placer 4 tables aux positions: (1,1), (1,3), (3,1), (3,3)
     
+    grille = [['_' for _ in range(5)] for _ in range(5)]
+    tables_positions = [(1,1), (1,3), (3,1), (3,3)]
     position_cuisine = (0, 2)
+
+    for i in range(5):
+        for j in range(5):
+            temp = (i,j)
+            if temp == position_cuisine:
+                grille[i][j] = 'K'
+            elif temp in tables_positions :
+                grille[i][j] = 'T'
     
     return grille, position_cuisine, tables_positions
 
@@ -76,8 +85,24 @@ def deplacer_serveur(grille, serveur_pos, direction):
     # TODO: Calculer la nouvelle position selon la direction
     # Vérifier que la position est valide (dans la grille)
     # Retourner la nouvelle position
-    
-    return nouvelle_pos
+
+    if direction == 'd':
+        if serveur_pos[1] + 1 <= 5:
+         nouvelle_pos = (serveur_pos[0],serveur_pos[1] + 1) 
+    elif direction == 'a':
+        if serveur_pos[1] -1 >= 0:
+            nouvelle_pos = (serveur_pos[0],serveur_pos[1] - 1) 
+    elif direction == 'w':
+        if serveur_pos[0] - 1 >= 0 :
+            nouvelle_pos = (serveur_pos[0] - 1, serveur_pos[1])
+    elif direction == 's':
+        if serveur_pos[0] + 1 <= 5:
+            nouvelle_pos = (serveur_pos[0] + 1, serveur_pos[1]) 
+
+    if grille[nouvelle_pos[0]][nouvelle_pos[1]] != '_':
+        return serveur_pos
+    else :
+        return nouvelle_pos
 
 
 def prendre_commande(grille, serveur_pos, commandes_en_attente):
@@ -100,6 +125,17 @@ def prendre_commande(grille, serveur_pos, commandes_en_attente):
     # TODO: Vérifier si une table avec client '!' est adjacente
     # Si oui: changer '!' en 'T', ajouter position à commandes_en_attente
     # Gagner 10 points
+
+    for i in range(5):
+        for j in range(5) :
+            if grille[i][j] == '!':
+                if serveur_pos[0] == (i + 1 or -1) and serveur_pos[1] == j + 1 or - 1:
+                    print(f"({i , j})")
+                    print(serveur_pos)
+                    succes = True
+                    points += 10
+                    nouvelle_grille[i][j] = 'T'
+                    nouvelles_commandes.append((i,j))
     
     return succes, nouvelle_grille, nouvelles_commandes, points
 
@@ -122,6 +158,21 @@ def livrer_commande(grille, serveur_pos, serveur_porte_commande, commandes_prete
     
     # TODO: Si serveur_porte_commande et serveur à côté d'une table dans commandes_pretes
     # Livrer la commande et gagner 20 points
+
+    if serveur_porte_commande :
+        ligne, colonne = serveur_pos
+        
+        # Vérifier les 4 directions adjacentes
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        
+        for dl, dc in directions:
+            nl, nc = ligne + dl, colonne + dc
+            if 0 <= nl < 5 and 0 <= nc < 5:
+                if (nl, nc) in commandes_pretes:
+                    succes = True
+                    points = 20
+                    commandes_pretes.remove((nl, nc))  
+                    break
     
     return succes, points
 
@@ -142,7 +193,13 @@ def generer_nouveaux_clients(grille, tables_positions, probabilite=0.3):
     
     # TODO: Pour chaque table vide 'T'
     # Avec une certaine probabilité, placer un client '!'
-    
+
+    for pos in tables_positions:
+        ligne, colonne = pos
+        if nouvelle_grille[ligne][colonne] == 'T':
+            if random.random() < probabilite :
+                    nouvelle_grille[ligne][colonne] = '!'
+
     return nouvelle_grille
 
 
@@ -174,6 +231,30 @@ def jouer():
     #     4. Générer nouveaux clients (tous les 3 tours)
     #     5. Mettre à jour le score
     #     6. Incrémenter tours
+
+    grille = generer_nouveaux_clients(grille,tables_pos)
+
+    while(tours <= max_tours) :
+        afficher_restaurant(grille,serveur_pos,score,commandes_en_attente)
+
+        points = 0
+        succes = False
+
+        x = input("Action : ")
+        if x == 'p':
+            succes,grille,commandes_en_attente,points = prendre_commande(grille,serveur_pos,commandes_en_attente)
+        elif x == 'w'or's'or 'a' or 'd':
+            serveur_pos = deplacer_serveur(grille,serveur_pos,x)
+        elif x == 'l' :
+            succes, points = livrer_commande(grille,serveur_pos,serveur_porte_commande,commandes_pretes)
+        
+        if tours % 3 == 0 :
+            grille = generer_nouveaux_clients(grille,tables_pos)
+        
+        if succes:
+            score += points
+
+        tours += 1
     
     print(f"\n=== PARTIE TERMINÉE ===")
     print(f"Score final: {score}")
@@ -205,7 +286,7 @@ if __name__ == '__main__':
     print(f"Position (2,2) + droite → {nouvelle_pos}")
     
     # Décommenter pour jouer
-    # print("\n" + "="*30)
-    # print("Appuyez sur Entrée pour lancer le jeu...")
-    # input()
-    # score_final = jouer()
+    print("\n" + "="*30)
+    print("Appuyez sur Entrée pour lancer le jeu...")
+    input()
+    score_final = jouer()
